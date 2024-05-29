@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recent CO2 Measurement</title>
+</head>
+<body>
+    <h1>Most Recent CO2 Measurement</h1>
+    <div id="co2-measurement">Loading...</div>
+
+    <script>
+        // Define the URL of the proxy server
+        const dataUrl = 'http://localhost:3000/data';
+
+        // Function to fetch and display the most recent CO2 measurement
+        async function fetchAndDisplayRecentCO2(url) {
+            try {
+                // Fetch the data from the proxy server
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Convert the response to text
+                const data = await response.text();
+
+                // Split the text into lines
+                const lines = data.split('\n');
+
+                // Log the total number of lines for debugging
+                console.log(`Total number of lines: ${lines.length}`);
+
+                // Find the most recent valid CO2 measurement
+                for (let i = lines.length - 1; i >= 0; i--) {
+                    const line = lines[i];
+                    // Log the line being processed for debugging
+                    console.log(`Processing line: ${line}`);
+
+                    // Skip comment lines
+                    if (line.startsWith('#')) continue;
+
+                    // Split the line into columns
+                    const columns = line.trim().split(/\s+/);
+
+                    // Log the columns for debugging
+                    console.log(`Columns: ${columns}`);
+
+                    // Extract the date and CO2 measurement (assuming CO2 is in the 11th column based on the file structure)
+                    const date = columns[1] + '-' + columns[2] + '-' + columns[3];
+                    const co2 = parseFloat(columns[10]);
+
+                    // Check if the CO2 value is valid
+                    if (!isNaN(co2) && co2 !== -999.99) {
+                        // Display the most recent CO2 measurement
+                        document.getElementById('co2-measurement').innerText = `Date: ${date}, CO2 Level: ${co2} ppm`;
+                        return;
+                    }
+                }
+
+                // If no valid CO2 measurement is found
+                document.getElementById('co2-measurement').innerText = 'No valid CO2 measurement found';
+
+            } catch (error) {
+                console.error('Error fetching or processing data:', error);
+                document.getElementById('co2-measurement').innerText = 'Error loading data';
+            }
+        }
+
+        // Call the function to fetch and display the most recent CO2 measurement
+        fetchAndDisplayRecentCO2(dataUrl);
+    </script>
+</body>
+</html>
